@@ -2,8 +2,6 @@ import torch
 import numpy as np
 from torch.autograd import Variable
 
-
-
 class PDE():
     def __init__(self, net, T, N):
         self.net = net

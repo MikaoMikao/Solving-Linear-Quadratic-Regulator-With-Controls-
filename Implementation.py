@@ -22,7 +22,7 @@ n = 2 # Define the dimension
 H = np.array([[1.0, 0.0],[0.0, 1.0]])
 M = np.array([[1.0, 0.0],[0.0, 1.0]])
 sigma = torch.tensor([[0.05],[0.05]],dtype = float)
-D = np.array([[0.01, 0.0],[0.0, 0.01]])
+D = np.array([[0.1, 0.0],[0.0, 0.1]])
 C = np.array([[0.1, 0.0],[0.0, 0.1]])
 R = np.array([[1.0, 0.0],[0.0, 1.0]])
 

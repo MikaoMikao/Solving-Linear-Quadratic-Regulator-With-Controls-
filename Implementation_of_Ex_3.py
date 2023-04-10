@@ -35,6 +35,9 @@ pde.fit(epochs,t_train,x_train)
 #Plot the training loss
 loss = pde.get_loss()
 plt.plot(range(epochs),torch.tensor(loss))
+plt.xlabel("Epoch")
+plt.ylabel("Loss")
+plt.title('Training loss')
 plt.show()
 
 # Plot the error aginst MC solution
@@ -42,4 +45,7 @@ interval = 80
 pde.aginst_MC(interval,t_train.squeeze(1).detach(),x_train.unsqueeze(2).detach())
 errors = pde.get_error()
 plt.plot(range(interval),torch.tensor(errors),'r')
+plt.xlabel("Epoch")
+plt.ylabel("Error")
+plt.title('Error Against MC Solution')
 plt.show()

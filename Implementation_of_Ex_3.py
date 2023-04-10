@@ -32,7 +32,8 @@ t_train = T*torch.rand(batch_size,1,requires_grad=True,dtype = float)+t0
 epochs = 200
 pde.fit(epochs,t_train,x_train)
 sol = pde.get_solution(t_train.squeeze(1).detach(),x_train.unsqueeze(2).detach())
-#Plot the training loss
+
+# Plot the training loss
 loss = pde.get_loss()
 plt.plot(range(epochs),torch.tensor(loss))
 plt.xlabel("Epoch")

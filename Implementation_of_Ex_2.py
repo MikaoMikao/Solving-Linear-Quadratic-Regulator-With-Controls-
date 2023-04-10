@@ -6,9 +6,8 @@ Created on Sat Apr  1 22:32:58 2023
 """
 import torch
 import numpy as np
-from Net_DGM import Net_DGM
-from FFN import FFN
-from Ex_1_1_methods import LQR
+from Ex_2_methods import Net_DGM,FFN
+from Ex_1_methods import LQR
 import matplotlib.pyplot as plt
 
 #Define matrices

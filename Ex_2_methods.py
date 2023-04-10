@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
 """
-Created on Sat Apr  1 21:42:16 2023
-
-@author: 97896
+@author: Zhanhao Zhang
 """
 
 import torch
 import torch.nn as nn
 from Ex_1_methods import LQR
+
 class FFN(nn.Module):
 
     def __init__(self, sizes, activation=nn.ReLU, output_activation=nn.Identity, batch_norm=False):
@@ -142,16 +141,12 @@ class PDE_DGM_Bellman(nn.Module):
     def fit(self, epoch: int, t_batch, x_batch):
         batch_size = t_batch.shape[0]
         optimizer = torch.optim.Adam(self.net_dgm.parameters(), lr=0.001)
-        #scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones = (10000,),gamma=0.1)
         loss_fn = nn.MSELoss()
-        #loss_list = []
-        #pbar = tqdm.tqdm(total=max_updates)
         for i in range(epoch):
             optimizer.zero_grad()
-
-            #x = self.x_ub*torch.rand(batch_size, self.d, requires_grad=True, dtype=float) + self.x_lb
+            
+            # Equation
             x = x_batch
-            #t = self.t0 + self.T*torch.rand(batch_size, 1, requires_grad=True,dtype=float)
             t = t_batch
             u = self.net_dgm(t, x)
             dx = get_gradient(u,x).unsqueeze(2)
@@ -164,21 +159,20 @@ class PDE_DGM_Bellman(nn.Module):
             target_functional = torch.zeros_like(u)
             f = dx.transpose(1,2)@self.H@x.unsqueeze(2) + dx.transpose(1,2)@self.M@self.alpha + x.unsqueeze(2).transpose(1,2) @ self.C @x.unsqueeze(2) + self.alpha.transpose(0,1)@self.D@self.alpha
             pde = dt + 0.5*trace + f
-            MSE_functional = loss_fn(pde, target_functional)
+            MSE_functional = loss_fn(pde, target_functional)# Should approach to zero
             
-           # x_terminal = self.x_ub*torch.rand(batch_size, self.d, requires_grad=True,dtype=float) + self.x_lb
+            # Terminal condtion
             x_terminal = x_batch
             t_terminal = torch.ones(batch_size, 1) * self.T
             u_terminal = self.net_dgm(t_terminal, x_terminal)
             terminal_condition = u_terminal - x_terminal.unsqueeze(2).transpose(1,2)@self.R@x_terminal.unsqueeze(2)
             target_terminal = torch.zeros(batch_size,1,dtype=float)
-            MSE_terminal = loss_fn(terminal_condition, target_terminal)
+            MSE_terminal = loss_fn(terminal_condition, target_terminal)# Should approach to zero
 
             loss = MSE_terminal + MSE_functional
             loss.backward(retain_graph = True)
             optimizer.step()
             self.loss_list.append(loss)
-            #scheduler.step()
             if i % 10 == 0:
                 print(f"Epoch {i}: Loss = {loss.item()}")
                 
@@ -188,7 +182,7 @@ class PDE_DGM_Bellman(nn.Module):
     def get_solution(self, t_batch, x_batch):
             return self.net_dgm(t_batch.unsqueeze(1),x_batch.squeeze(2))
         
-    def aginst_MC(self,interval, t_batch, x_batch):
+    def error_aginst_MC(self,interval, t_batch, x_batch):
         lqr = LQR(self.H, self.M, self.sigma, self.C, self.D, self.R, self.T, 2)
         MC_test = lqr.MC_solution_afix(1000,1000,t_batch,x_batch)
         #print(MC_test)

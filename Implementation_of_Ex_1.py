@@ -5,7 +5,7 @@
 
 import torch
 import numpy as np
-from Ex_1_1_methods import LQR
+from Ex_1_methods import LQR
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import MultipleLocator
 
@@ -26,12 +26,12 @@ D = np.array([[0.1, 0.0],[0.0, 0.1]])
 C = np.array([[0.1, 0.0],[0.0, 0.1]])
 R = np.array([[1.0, 0.0],[0.0, 1.0]])
 
-# Define the mehods
+# Apply the mehods to get the solution of the Riccati ODE
 lqr = LQR(H, M, sigma, C, D, R, T, n)
 S_real = lqr.solve_riccati_ode(tgrid)
 
-# Define the batch with batch_size = 100
-batch_size = 100
+# Define the batch with batch_size = 25
+batch_size = 25
 t_batch = torch.rand(batch_size,dtype = float)
 x_batch = torch.rand(batch_size,n,1,dtype = float)*0.5
 

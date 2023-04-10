@@ -1,97 +1,109 @@
-import torch 
-import numpy as np
-from torch.autograd import Variable
+# -*- coding: utf-8 -*-
+"""
+Created on Mon Apr 10 23:35:03 2023
+
+@author: 97896
+"""
+import torch
+import torch.nn as nn
+from Ex_1_methods import LQR
+from Ex_2_methods import Net_DGM
+
+# Define the methods for geting gradients and Hessian matrix
+def get_gradient(output, x):
+    grad = torch.autograd.grad(output, x, grad_outputs=torch.ones_like(output), create_graph=True, retain_graph=True, only_inputs=True)[0]
+    return grad
+
+def get_hess(grad, x):
+    hess_diag = []
+    for d in range(x.shape[1]):
+        v = grad[:,d].view(-1,1)
+        grad2 = torch.autograd.grad(v,x,grad_outputs=torch.ones_like(v), only_inputs=True, create_graph=True, retain_graph=True)[0]
+        hess_diag.append(grad2)    
+    hess_diag = torch.stack(hess_diag,1)
+    return hess_diag
 
 
+# Deep Galerkin method for solving PDE
+class PDE_DGM_Bellman(nn.Module):
 
-class PDE():
-    def __init__(self, net, T, N):
-        self.net = net
+    def __init__(self, d: int, hidden_dim: int, alpha:float, H:float, M: float, C: float, D:float, R:float, sigma:float, T:float):
+
+        super().__init__()
+        self.d = d
+        self.H = H
+        self.M = M
+        self.C = C
+        self.D = D
+        self.R = R
+        self.sigma = sigma
+        self.alpha = alpha
         self.T = T
-        self.N = N
-
-    def __equation(self, size):
-        H = np.array([[1.0, 0.0],[0.0, 1.0]])
-        M = np.array([[1.0, 0.0],[0.0, 1.0]])
-        D = np.array([[0.1, 0.0],[0.0, 0.1]])
-        C = np.array([[0.1, 0.0],[0.0, 0.1]])
-        sigma = torch.tensor([[0.05],[0.05]],dtype=float)
         
-        H = torch.tensor(H,dtype=float)
-        M = torch.tensor(M,dtype=float)
-        D = torch.tensor(D,dtype=float)
-        C = torch.tensor(C,dtype=float)
-        alpha = np.array([[1,1] for i in range(size)])
-        alpha = torch.tensor(alpha,dtype=float).unsqueeze(2)
-
-        x = torch.cat((torch.rand(size, 1)*self.T, torch.rand([size, 2],dtype=float)*self.N), dim=1)
-        x = Variable(x, requires_grad = True)
-        x_= torch.cat((x[:,1].reshape(-1,1),x[:,2].reshape(-1,1)),dim=1).unsqueeze(2)
-
-    
-        d = torch.autograd.grad(self.net(x), x, grad_outputs = torch.ones_like(self.net(x)), create_graph=True)
-        dt = d[0][:, 0].reshape(-1, 1)  # transform the vector into a column vector
-        dx = torch.cat((d[0][:,1].reshape(-1,1),d[0][:,2].reshape(-1,1)),dim=1).unsqueeze(2)
-        g_dxx = torch.autograd.grad(dx, x, grad_outputs=torch.ones_like(dx), create_graph=True)
-        dxx = torch.cat((g_dxx[0][:,1].reshape(-1,1),g_dxx[0][:,2].reshape(-1,1)),dim=1).unsqueeze(2)
+        self.net_dgm = Net_DGM(d, hidden_dim, activation='Tanh')
+        self.loss_list = []
+        self.error_list =[]
         
-        f_matrix = (dx.transpose(1,2)@H@x_) + (dx.transpose(1,2)@M@alpha)+ (x_.transpose(1,2) @ C @x_) + alpha.transpose(1,2)@D@alpha
-        
-        product = sigma@ sigma.transpose(0,1) @  dxx
-        trace = torch.diagonal(product, dim1=1, dim2=2)
-        
-        diff_error = torch.square(dt + 0.5*trace + f_matrix)
-
-        return diff_error
-
-    def __boundary(self, size):
-        R = np.array([[1.0, 0.0],[1.0, 0.0]])
-        R = torch.tensor(R,dtype=float)
-        x = torch.cat((torch.rand(size, 1)*self.T, torch.rand([size, 2],dtype=float)*self.N), dim=1)
-        x = Variable(x, requires_grad = True)
-        x_= torch.cat((x[:,1].reshape(-1,1),x[:,2].reshape(-1,1)),dim=1).unsqueeze(2)
-
-        
-        x_end = torch.cat((torch.ones(size, 1)*self.T, torch.rand([size, 2],dtype=float) * self.N), dim=1)
-        xRx = x_.transpose(1,2)@R@x_
-        end_error = torch.square(self.net(x_end)-xRx)   
-        
-        return end_error
-
-    def loss_func(self, size):
-        diff_error = self.__equation(size)
-        end_error = self.__boundary(size)
-        
-        return torch.mean(diff_error + end_error)
-    
-    def output(self, x):
-        print(self.net(x))
-        return self.net(x)
-    
-
-class Train():
-    def __init__(self, net, PDE_equ, BATCH_SIZE):
-        self.errors = []
-        self.BATCH_SIZE = BATCH_SIZE
-        self.net = net
-        self.model = PDE_equ
-
-    def train(self, epoch, lr):
-        optimizer = torch.optim.Adam(self.net.parameters(), lr)
-        for e in range(epoch):
+    def fit(self, epoch: int, t_batch, x_batch):
+        batch_size = t_batch.shape[0]
+        optimizer = torch.optim.Adam(self.net_dgm.parameters(), lr=0.001)
+        loss_fn = nn.MSELoss()
+        for i in range(epoch):
             optimizer.zero_grad()
-            loss = self.model.loss_func(self.BATCH_SIZE)
-            loss.backward()
+            
+            # Equation
+            x = x_batch
+            t = t_batch
+            u = self.net_dgm(t, x)
+            dx = get_gradient(u,x).unsqueeze(2)
+            dt = get_gradient(u, t)
+            dxx = get_hess(dx, x)
+            
+            product = self.sigma@ self.sigma.transpose(0,1) @  dxx
+            diagonal_elements = torch.diagonal(product, dim1=1, dim2=2).unsqueeze(2)
+            trace = torch.sum(diagonal_elements,dim=1)
+            target_functional = torch.zeros_like(u)
+            f = dx.transpose(1,2)@self.H@x.unsqueeze(2) + dx.transpose(1,2)@self.M@self.alpha + x.unsqueeze(2).transpose(1,2) @ self.C @x.unsqueeze(2) + self.alpha.transpose(0,1)@self.D@self.alpha
+            pde = dt + 0.5*trace + f
+            MSE_functional = loss_fn(pde, target_functional)
+            
+            # Terminal condtion
+            x_terminal = x_batch
+            t_terminal = torch.ones(batch_size, 1) * self.T
+            u_terminal = self.net_dgm(t_terminal, x_terminal)
+            terminal_condition = u_terminal - x_terminal.unsqueeze(2).transpose(1,2)@self.R@x_terminal.unsqueeze(2)
+            target_terminal = torch.zeros(batch_size,1,dtype=float)
+            MSE_terminal = loss_fn(terminal_condition, target_terminal)
+
+            loss = MSE_terminal + MSE_functional
+            loss.backward(retain_graph = True)
             optimizer.step()
-            self.errors.append(loss.detach())
-            if e % 100 == 0:
-                print("Epoch {} - lr {} -  loss: {}".format(e, lr, loss.item()))
+            self.loss_list.append(loss)
+            if i % 10 == 0:
+                print(f"Epoch {i}: Loss = {loss.item()}")
                 
-                
-    def get_errors(self):
-        return self.errors
-
-    def save_model(self):
-        torch.save(self.net, 'net_model.pkl')
+    def get_loss(self):
+            return self.loss_list
     
-
+    # Get the NN solution 
+    def get_solution(self, t_batch, x_batch):
+            return self.net_dgm(t_batch.unsqueeze(1),x_batch.squeeze(2))
+        
+    # Error aginst MC solution   
+    def aginst_MC(self,interval, t_batch, x_batch):
+        lqr = LQR(self.H, self.M, self.sigma, self.C, self.D, self.R, self.T, 2)
+        MC_test = lqr.MC_solution_afix(1000,1000,t_batch,x_batch)
+        optimizer = torch.optim.Adam(self.net_dgm.parameters(), lr=0.001)
+        loss_fn = nn.MSELoss()
+        for i in range(interval):
+            optimizer.zero_grad()
+            error = loss_fn(self.get_solution(t_batch, x_batch),MC_test)
+            error.backward()
+            optimizer.step()
+            self.error_list.append(error)
+            if i % 10 == 0:
+                print(f"Epoch {i}: Error = {error.item()}")
+        return MC_test
+       
+    def get_error(self):           
+        return self.error_list

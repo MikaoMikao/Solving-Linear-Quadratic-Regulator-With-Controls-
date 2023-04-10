@@ -91,6 +91,7 @@ class PDE_DGM_Bellman(nn.Module):
         
     # Error aginst MC solution   
     def aginst_MC(self,interval, t_batch, x_batch):
+        self.error_list = []
         lqr = LQR(self.H, self.M, self.sigma, self.C, self.D, self.R, self.T, 2)
         MC_test = lqr.MC_solution_afix(1000,1000,t_batch,x_batch)
         optimizer = torch.optim.Adam(self.net_dgm.parameters(), lr=0.001)

@@ -6,7 +6,7 @@ Created on Mon Apr 10 20:32:19 2023
 """
 
 import torch
-from Net_DGM import PDE_DGM_Bellman
+from Ex_2_methods import PDE_DGM_Bellman
 import matplotlib.pyplot as plt
 
 # Set the bounds of t and x

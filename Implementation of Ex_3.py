@@ -18,8 +18,8 @@ net =FFN(sizes=([3]+[200,200]+[1]))
 T = 1
 N = 1
 size = 100
-x_ = N*torch.rand(N,2,1,dtype = float)
-t_ = T*torch.rand(N,dtype = float)
+x_ = N*torch.rand(size,2,1,dtype = float)
+t_ = T*torch.rand(size,dtype = float)
 
 # Train the model and plot the trainning loss
 PDE_equation = PDE(net, T, N)

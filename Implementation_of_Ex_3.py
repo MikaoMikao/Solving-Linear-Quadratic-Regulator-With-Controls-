@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-@author: Zhanhao Zhang
+Inspired by https://github.com/msabvid/Deep-PDE-Solvers
 """
 
 import torch

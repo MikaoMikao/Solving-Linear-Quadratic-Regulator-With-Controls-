@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Mon Apr 10 20:32:19 2023
-
-@author: 97896
+@author: Zhanhao Zhang
 """
 
 import torch

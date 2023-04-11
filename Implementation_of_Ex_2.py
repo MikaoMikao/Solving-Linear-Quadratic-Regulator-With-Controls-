@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-Created on Sat Apr  1 22:32:58 2023
-
 @author: Zhanhao Zhang
 """
 import torch

@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Sat Apr  1 21:42:16 2023
-
-@author: 97896
+@author: M. Sabate-Vidales and C. Jiang
 """
 
 import torch

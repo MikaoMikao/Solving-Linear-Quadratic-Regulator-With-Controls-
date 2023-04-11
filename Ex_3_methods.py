@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Mon Apr 10 23:35:03 2023
-
-@author: 97896
+Inspired by https://github.com/msabvid/Deep-PDE-Solvers
 """
 import torch
 import torch.nn as nn

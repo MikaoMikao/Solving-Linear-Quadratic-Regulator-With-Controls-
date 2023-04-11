@@ -2,12 +2,12 @@
 """
 Created on Sat Apr  1 22:32:58 2023
 
-@author: 97896
+@author: Zhanhao Zhang
 """
 import torch
 import numpy as np
-from Ex_2_methods import Net_DGM,FFN
 from Ex_1_methods import LQR
+from Ex_2_methods import Net_DGM,FFN
 import matplotlib.pyplot as plt
 
 #Define matrices

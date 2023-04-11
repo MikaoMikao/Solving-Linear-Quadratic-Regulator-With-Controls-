@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-@author: M. Sabate-Vidales and C. Jiang
+Inspired by https://github.com/msabvid/Deep-PDE-Solvers and https://github.com/EurasianEagleOwl/DeepGalerkinMethod
 """
 
 import torch

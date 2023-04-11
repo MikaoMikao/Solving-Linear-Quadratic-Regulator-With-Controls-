@@ -108,13 +108,8 @@ class LQR:
         batch_size = t_batch.shape[0]
         dt = torch.tensor((self.T)/N_timesteps, dtype=float)
         v_simulated_mean = torch.zeros(batch_size,1)
-        S = torch.zeros(batch_size, N_timesteps+1, 2, 2, dtype = float)
-        for i in range(batch_size):
-           t = t_batch[i]
-           teval = np.linspace(t, self.T, N_timesteps+1)
-           S[i] = self.solve_riccati_ode(teval)
         x = x_batch.repeat(N_MC,1,1,1).transpose(0,1)
-        a = torch.tensor([[1],[1]],dtype=float)
+        a = torch.tensor([[1.0],[1.0]],dtype=float)
         v_simulated = 0
         x_next = 0
         for j in range(N_timesteps):

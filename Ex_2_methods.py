@@ -5,7 +5,8 @@ Inspired by https://github.com/msabvid/Deep-PDE-Solvers and https://github.com/E
 
 import torch
 import torch.nn as nn
-from Ex_1_methods import LQR
+
+
 class FFN(nn.Module):
 
     def __init__(self, sizes, activation=nn.ReLU, output_activation=nn.Identity, batch_norm=False):

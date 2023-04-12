@@ -220,7 +220,7 @@ xx_test = Variable(xx_test, requires_grad = True)
 
 train = Train(net1, R1equation, net2, H2equation, BATCH_SIZE)
 
-v_test_data,a_test_data= train.train(Epoch = 100, epoch = 20, lr = 0.01, x_test = xx_test)
+v_test_data,a_test_data= train.train(Epoch = 500, epoch = 20, lr = 0.005, x_test = xx_test)
 
 
 loss = train.get_errors()

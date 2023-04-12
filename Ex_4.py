@@ -196,18 +196,18 @@ class Train():
 
 
 
-net1 =FFN(sizes=([3]+[200,200]+[1]))
-net2 =FFN(sizes=([3]+[200,200]+[2]))
+net1 =FFN(sizes=([3]+[400,300]+[1]))
+net2 =FFN(sizes=([3]+[400,300]+[2]))
 
 
-T= 1
-N= 1
-BATCH_SIZE = 100
+T= 10
+N= 5
+BATCH_SIZE = 2**10
 
 R1equation = R1(net1, T, N)
 H2equation = H2(net2, T, N)
 
-T= 1
+T= 10
 N= 1
 
  
@@ -220,7 +220,7 @@ xx_test = Variable(xx_test, requires_grad = True)
 
 train = Train(net1, R1equation, net2, H2equation, BATCH_SIZE)
 
-v_test_data,a_test_data= train.train(Epoch = 500, epoch = 20, lr = 0.005, x_test = xx_test)
+v_test_data,a_test_data= train.train(Epoch = 1000, epoch = 20, lr = 0.0005, x_test = xx_test)
 
 
 loss = train.get_errors()
@@ -259,8 +259,6 @@ for i in range(len(a_test_data)):
     num = np.mean(np.sqrt(errors_a1+errors_a2))
     errors_a.append(np.sqrt(num))
     
-    
-
 fig = plt.figure()
 plt.plot(errors_V, label='Errors')
 plt.title('V error', fontsize=10)
@@ -269,4 +267,3 @@ fig = plt.figure()
 plt.plot(np.log(errors_a), label='Errors')
 plt.title('a error', fontsize=10)
 plt.show()
-
